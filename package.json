@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
+    "dev:open": "vite --open",
     "format": "prettier -w src package.json tsconfig.json vite.config.ts",
     "build": "tsc && vite build",
     "preview": "vite preview"
