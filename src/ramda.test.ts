@@ -1,4 +1,4 @@
-import { mergeDeepRight } from "ramda";
+import { equals, mergeDeepRight } from "ramda";
 import { assert, describe, it } from "vitest";
 
 describe("ramda", () => {
@@ -8,5 +8,8 @@ describe("ramda", () => {
       mergeDeepRight({ a: { b: "left" } }, { a: { b: "right" } }),
       { a: { b: "right" } }
     );
+  });
+  it("equals", () => {
+    assert(equals(["1", "2", "3"], ["1", "2", "3"]));
   });
 });
