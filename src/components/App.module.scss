@@ -10,18 +10,4 @@
   > h1 {
     margin: 10px 0;
   }
-
-  > div {
-    > * {
-      padding: 5px;
-    }
-
-    > div > textarea {
-      width: calc(100% - 10px);
-    }
-  }
-}
-
-button {
-  font-size: calc(10px + 2vmin);
 }
