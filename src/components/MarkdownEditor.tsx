@@ -1,6 +1,13 @@
 import { Root } from "mdast";
 import { clone, equals, mergeDeepRight, update } from "ramda";
-import { createElement, Fragment, useEffect, useRef, useState } from "react";
+import {
+  createElement,
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
@@ -87,12 +94,26 @@ function useIsMounted() {
   return ref;
 }
 
+function useStateWithSync<T>(defaultState: T) {
+  const [state, setState] = useState(defaultState);
+
+  useEffect(() => {
+    setState(defaultState);
+  }, [defaultState]);
+
+  return [state, setState] as const;
+}
+
 export default function MarkdownEditor(props: { content: string }) {
   const { content: defaultContent } = props;
-  const [markdown, setMarkdown] = useState({
-    content: defaultContent,
-    fragments: [] as string[],
-  });
+  const defaultMarkdown = useMemo(
+    () => ({
+      content: defaultContent,
+      fragments: [] as string[],
+    }),
+    [defaultContent]
+  );
+  const [markdown, setMarkdown] = useStateWithSync(defaultMarkdown);
   const [position, setPosition] = useState(-1);
   const isMounted = useIsMounted();
 
@@ -155,12 +176,9 @@ function FragmentPreviewEditor(props: {
   onSelect: () => void;
 }) {
   const { content: defaultContent, isSelected, onChanged, onSelect } = props;
-  const [content, setContent] = useState(defaultContent);
+  const [content, setContent] = useStateWithSync(defaultContent);
   const [preview, setPreview] = useState(<Fragment />);
   const isMounted = useIsMounted();
-
-  // props で content が更新されたら状態に反映する
-  useEffect(() => void setContent(defaultContent), [defaultContent]);
 
   // プレビューを更新する
   useEffect(() => {
