@@ -3,9 +3,10 @@ import styles from "./App.module.scss";
 
 const block = "```";
 
-const markdown = `
-# test
+const markdown = `# test
+
 a<br/>b
+
 ${block}javascript
 const a = b + c + d;
 ${block}

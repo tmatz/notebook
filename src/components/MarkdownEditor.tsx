@@ -1,8 +1,9 @@
 import { Root } from "mdast";
-import { clone, equals, mergeDeepRight, update } from "ramda";
+import { clone, equals as deepEquals, mergeDeepRight, update } from "ramda";
 import {
   createElement,
   Fragment,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -94,14 +95,28 @@ function useIsMounted() {
   return ref;
 }
 
-function useStateWithSync<T>(defaultState: T) {
+function useStateWithSync<T>(
+  defaultState: T,
+  equals?: (a: T, b: T) => boolean
+) {
   const [state, setState] = useState(defaultState);
+  const stateRef = useRef(state);
+
+  const updateState = useCallback(
+    (next: T) => {
+      if (equals && equals(stateRef.current, next)) return;
+      if (!equals && stateRef.current === next) return;
+      stateRef.current = next;
+      setState(next);
+    },
+    [equals, stateRef, setState]
+  );
 
   useEffect(() => {
-    setState(defaultState);
-  }, [defaultState]);
+    updateState(defaultState);
+  }, [updateState, defaultState]);
 
-  return [state, setState] as const;
+  return [state, updateState] as const;
 }
 
 export default function MarkdownEditor(props: { content: string }) {
@@ -113,15 +128,9 @@ export default function MarkdownEditor(props: { content: string }) {
     }),
     [defaultContent]
   );
-  const [markdown, setMarkdown] = useStateWithSync(defaultMarkdown);
+  const [markdown, setMarkdown] = useStateWithSync(defaultMarkdown, deepEquals);
   const [position, setPosition] = useState(-1);
   const isMounted = useIsMounted();
-
-  const updateMarkdown = (next: typeof markdown) => {
-    if (!equals(markdown, next)) {
-      setMarkdown(next);
-    }
-  };
 
   // ショートカットで編集を確定する（Ctrl+Enter | Escape）
   useEffect(() => {
@@ -139,7 +148,7 @@ export default function MarkdownEditor(props: { content: string }) {
     (async () => {
       const fragments = await splitMarkdownContents(markdown.content);
       if (isMounted.current) {
-        updateMarkdown({ ...markdown, fragments });
+        setMarkdown({ ...markdown, fragments });
       }
     })();
   }, [isMounted, markdown]);
@@ -152,12 +161,8 @@ export default function MarkdownEditor(props: { content: string }) {
           content={fragment}
           isSelected={index === position}
           onChanged={(fragment) => {
-            const fragments = update(
-              index,
-              fragment.endsWith("\n") ? fragment : `${fragment}\n`,
-              markdown.fragments
-            );
-            updateMarkdown({
+            const fragments = update(index, fragment, markdown.fragments);
+            setMarkdown({
               content: fragments.join("\n"),
               fragments,
             });
@@ -194,7 +199,7 @@ function FragmentPreviewEditor(props: {
   // 編集結果を反映する
   useEffect(() => {
     if (!isSelected) {
-      onChanged(content);
+      onChanged(content.endsWith("\n") ? content : content + "\n");
     }
   }, [content, isSelected]);
 
