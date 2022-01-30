@@ -1,5 +1,5 @@
 import { Root } from "mdast";
-import { clone, mergeDeepRight, update } from "ramda";
+import { clone, equals, mergeDeepRight, update } from "ramda";
 import { createElement, Fragment, useEffect, useState } from "react";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
@@ -87,9 +87,11 @@ const a = b + c + d;
 ${block}
 `;
 
+const initialContents: string[] = [];
+
 export default function App() {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
-  const [contents, setContents] = useState<string[]>([]);
+  const [contents, setContents] = useState(initialContents);
   const [position, setPosition] = useState(-1);
 
   // ショートカットで編集を確定する（Ctrl+Enter | Escape）
@@ -97,7 +99,7 @@ export default function App() {
     const listener = (ev: KeyboardEvent) => {
       if ((ev.ctrlKey && ev.code === "Enter") || ev.code === "Escape") {
         setPosition(-1);
-        setMarkdown(contents.join("\n"));
+        // setMarkdown(contents.join("\n"));
       }
     };
     document.addEventListener("keydown", listener);
@@ -108,15 +110,21 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
     (async () => {
-      const contents = await splitMarkdownContents(markdown);
-      if (isMounted) {
-        setContents(contents);
+      const newContents = await splitMarkdownContents(markdown);
+      if (isMounted && !equals(contents, newContents)) {
+        setContents(newContents);
       }
     })();
     return () => {
       isMounted = false;
     };
   }, [markdown]);
+
+  useEffect(() => {
+    if (contents !== initialContents) {
+      setMarkdown(contents.join("\n"));
+    }
+  }, [position, contents]);
 
   return (
     <div className={styles.App}>
@@ -128,7 +136,10 @@ export default function App() {
             content={content}
             isSelected={index === position}
             onChanged={(content) => {
-              setContents(update(index, content, contents));
+              const newContents = update(index, content, contents);
+              if (!equals(contents, newContents)) {
+                setContents(newContents);
+              }
             }}
             onSelect={() => setPosition(index)}
           />
