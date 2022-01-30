@@ -12,16 +12,13 @@
   }
 
   > div {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: 100%;
     > * {
-      margin: 5px;
+      padding: 5px;
     }
-  }
 
-  > div > textarea {
-    width: 50vw;
+    > div > textarea {
+      width: calc(100% - 10px);
+    }
   }
 }
 
