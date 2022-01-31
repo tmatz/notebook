@@ -240,18 +240,27 @@ function FragmentPreviewEditor(props: {
     }
   }, [textareaRef, isSelected]);
 
+  const rows = 1 + (content.match(/\n/g)?.length ?? 0);
+  const cols =
+    1 + content.split("\n").reduce((acc, it) => Math.max(acc, it.length), 0);
+
   return (
-    <>
+    <div className={styles.FragmentPreviewEditor}>
       {isSelected && (
         <div>
           <textarea
             value={content}
-            onChange={(ev) => setContent(ev.target.value)}
+            rows={rows}
+            cols={cols}
+            onChange={(ev) => {
+              const value = ev.target.value;
+              setContent(ev.target.value);
+            }}
             ref={textareaRef}
           />
         </div>
       )}
       <div onClick={() => onSelect()}>{preview}</div>
-    </>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
 .MarkdownEditor {
-  > div {
-    > * {
-      padding: 5px;
-    }
-
-    > textarea {
+  > .FragmentPreviewEditor {
+    box-sizing: border-box;
+    padding: 5px;
+    width: 100%;
+    > div > textarea {
+      height: auto;
       width: calc(100% - 10px);
     }
   }
