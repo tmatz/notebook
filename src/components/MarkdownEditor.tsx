@@ -212,6 +212,7 @@ function FragmentPreviewEditor(props: {
   const [content, setContent] = useStateWithSync(defaultContent);
   const [preview, setPreview] = useState(<Fragment />);
   const isMounted = useIsMounted();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // プレビューを更新する
   useEffect(() => {
@@ -231,6 +232,14 @@ function FragmentPreviewEditor(props: {
     }
   }, [content, isSelected]);
 
+  useEffect(() => {
+    if (isSelected && textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      textarea.focus();
+    }
+  }, [textareaRef, isSelected]);
+
   return (
     <>
       {isSelected && (
@@ -238,6 +247,7 @@ function FragmentPreviewEditor(props: {
           <textarea
             value={content}
             onChange={(ev) => setContent(ev.target.value)}
+            ref={textareaRef}
           />
         </div>
       )}
