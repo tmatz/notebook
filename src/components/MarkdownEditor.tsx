@@ -101,12 +101,12 @@ function useStateWithSync<T>(
 ) {
   const [state, setState] = useState(defaultState);
   const stateRef = useRef(state);
+  stateRef.current = state;
 
   const updateState = useCallback(
     (next: T) => {
       if (equals && equals(stateRef.current, next)) return;
       if (!equals && stateRef.current === next) return;
-      stateRef.current = next;
       setState(next);
     },
     [equals, stateRef, setState]
@@ -117,6 +117,10 @@ function useStateWithSync<T>(
   }, [updateState, defaultState]);
 
   return [state, updateState] as const;
+}
+
+function minmax(a: number, min: number, max: number) {
+  return Math.max(Math.min(a, max), min);
 }
 
 export default function MarkdownEditor(props: { content: string }) {
@@ -131,12 +135,36 @@ export default function MarkdownEditor(props: { content: string }) {
   const [markdown, setMarkdown] = useStateWithSync(defaultMarkdown, deepEquals);
   const [position, setPosition] = useState(-1);
   const isMounted = useIsMounted();
+  const markdownRef = useRef(markdown);
+  const positionRef = useRef(position);
+
+  markdownRef.current = markdown;
+  positionRef.current = position;
 
   // ショートカットで編集を確定する（Ctrl+Enter | Escape）
   useEffect(() => {
     const listener = (ev: KeyboardEvent) => {
+      const position = positionRef.current;
+      const isEditing = position >= 0;
       if ((ev.ctrlKey && ev.code === "Enter") || ev.code === "Escape") {
-        setPosition(-1);
+        if (isEditing) {
+          setPosition(-1);
+          ev.preventDefault();
+          return;
+        }
+      }
+      if (ev.code === "Tab" && isEditing) {
+        if (isEditing) {
+          const diff = ev.shiftKey ? -1 : 1;
+          const newPosition = minmax(
+            position + diff,
+            0,
+            markdownRef.current.fragments.length - 1
+          );
+          setPosition(newPosition);
+          ev.preventDefault();
+          return;
+        }
       }
     };
     document.addEventListener("keydown", listener);
