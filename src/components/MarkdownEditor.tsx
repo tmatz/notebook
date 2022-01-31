@@ -123,8 +123,11 @@ function minmax(a: number, min: number, max: number) {
   return Math.max(Math.min(a, max), min);
 }
 
-export default function MarkdownEditor(props: { content: string }) {
-  const { content: defaultContent } = props;
+export default function MarkdownEditor(props: {
+  content: string;
+  onChange?: (content: string) => void;
+}) {
+  const { content: defaultContent, onChange } = props;
   const defaultMarkdown = useMemo(
     () => ({
       content: defaultContent,
@@ -181,6 +184,12 @@ export default function MarkdownEditor(props: { content: string }) {
     })();
   }, [isMounted, markdown]);
 
+  useEffect(() => {
+    if (defaultContent != markdown.content) {
+      onChange?.(markdown.content);
+    }
+  }, [onChange, markdown.content]);
+
   return (
     <div className={styles.MarkdownEditor}>
       {markdown.fragments.map((fragment, index) => (
@@ -205,8 +214,8 @@ export default function MarkdownEditor(props: { content: string }) {
 function FragmentPreviewEditor(props: {
   content: string;
   isSelected: boolean;
-  onChanged: (content: string) => void;
-  onSelect: () => void;
+  onSelect?: () => void;
+  onChanged?: (content: string) => void;
 }) {
   const { content: defaultContent, isSelected, onChanged, onSelect } = props;
   const [content, setContent] = useStateWithSync(defaultContent);
@@ -228,7 +237,11 @@ function FragmentPreviewEditor(props: {
   // 編集結果を反映する
   useEffect(() => {
     if (!isSelected) {
-      onChanged(content.endsWith("\n") ? content : content + "\n");
+      // 末尾に改行を含める
+      const newContent = content.endsWith("\n") ? content : content + "\n";
+      if (defaultContent !== newContent) {
+        onChanged?.(newContent);
+      }
     }
   }, [content, isSelected]);
 
@@ -260,7 +273,7 @@ function FragmentPreviewEditor(props: {
           />
         </div>
       )}
-      <div onClick={() => onSelect()}>{preview}</div>
+      <div onClick={() => onSelect?.()}>{preview}</div>
     </div>
   );
 }
