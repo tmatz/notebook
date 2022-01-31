@@ -17,6 +17,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";
+import { concatMap, useObservable } from "~/hooks/rxjs";
 import styles from "./MarkdownEditor.module.scss";
 
 type Schema = typeof defaultSchema;
@@ -85,16 +86,6 @@ async function splitMarkdownContents(contents: string) {
   );
 }
 
-function useIsMounted() {
-  const ref = useRef(false);
-
-  useEffect(() => {
-    ref.current = true;
-    return () => void (ref.current = false);
-  }, []);
-  return ref;
-}
-
 function useStateWithSync<T>(
   defaultState: T,
   equals?: (a: T, b: T) => boolean
@@ -137,7 +128,6 @@ export default function MarkdownEditor(props: {
   );
   const [markdown, setMarkdown] = useStateWithSync(defaultMarkdown, deepEquals);
   const [position, setPosition] = useState(-1);
-  const isMounted = useIsMounted();
   const markdownRef = useRef(markdown);
   const positionRef = useRef(position);
 
@@ -175,14 +165,20 @@ export default function MarkdownEditor(props: {
   }, []);
 
   // markdown をコンテントに分割する
-  useEffect(() => {
-    (async () => {
-      const fragments = await splitMarkdownContents(markdown.content);
-      if (isMounted.current) {
-        setMarkdown({ ...markdown, fragments });
-      }
-    })();
-  }, [isMounted, markdown]);
+  useObservable(
+    ($) =>
+      $.pipe(
+        concatMap(async ([markdown]) => {
+          const fragments = await splitMarkdownContents(markdown.content);
+          return [fragments, markdown] as const;
+        })
+      ).subscribe({
+        next([fragments, markdown]) {
+          setMarkdown({ ...markdown, fragments });
+        },
+      }),
+    [markdown] as const
+  );
 
   useEffect(() => {
     if (defaultContent != markdown.content) {
@@ -220,19 +216,22 @@ function FragmentPreviewEditor(props: {
   const { content: defaultContent, isSelected, onChanged, onSelect } = props;
   const [content, setContent] = useStateWithSync(defaultContent);
   const [preview, setPreview] = useState(<Fragment />);
-  const isMounted = useIsMounted();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // プレビューを更新する
-  useEffect(() => {
-    (async () => {
-      const ast = await parseMarkdown(content);
-      const preview = await formatMarkdown(ast);
-      if (isMounted.current) {
+  useObservable(
+    ($) =>
+      $.pipe(
+        concatMap(async ([content]) => {
+          const ast = await parseMarkdown(content);
+          const preview = await formatMarkdown(ast);
+          return preview;
+        })
+      ).subscribe((preview) => {
         setPreview(preview);
-      }
-    })();
-  }, [isMounted, content]);
+      }),
+    [content] as const
+  );
 
   // 編集結果を反映する
   useEffect(() => {
@@ -266,7 +265,6 @@ function FragmentPreviewEditor(props: {
             rows={rows}
             cols={cols}
             onChange={(ev) => {
-              const value = ev.target.value;
               setContent(ev.target.value);
             }}
             ref={textareaRef}
