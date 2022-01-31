@@ -1,10 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
+import markdownSlice from "./modules/markdown";
 
 const epicMiddleware = createEpicMiddleware();
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    markdown: markdownSlice.reducer,
+  },
   middleware: (getDefaultMiddlewares) => [
     ...getDefaultMiddlewares({}),
     epicMiddleware,
