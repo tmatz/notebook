@@ -2,17 +2,26 @@ import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
 import markdownSlice from "./modules/markdown";
 
-const epicMiddleware = createEpicMiddleware();
+export function createStore(extraArgument: {}) {
+  const epicMiddleware = createEpicMiddleware();
 
-export const store = configureStore({
-  reducer: {
-    markdown: markdownSlice.reducer,
-  },
-  middleware: (getDefaultMiddlewares) => [
-    ...getDefaultMiddlewares({}),
-    epicMiddleware,
-  ],
-});
+  return configureStore({
+    reducer: {
+      markdown: markdownSlice.reducer,
+    },
+    middleware: (getDefaultMiddlewares) =>
+      [
+        ...getDefaultMiddlewares({
+          thunk: {
+            extraArgument,
+          },
+        }),
+        epicMiddleware,
+      ] as const,
+  });
+}
 
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>;
+type Store = ReturnType<typeof createStore>;
+export type AppDispatch = Store["dispatch"];
+export type RootState = ReturnType<Store["getState"]>;
+export type ExtraArgument = Parameters<typeof createStore>[0];
