@@ -9,6 +9,7 @@
     "test:watch": "vitest watch",
     "coverage": "vitest run --coverage",
     "build": "tsc && vite build",
+    "postbuild": "ncp htaccess dist/.htaccess",
     "preview": "vite preview"
   },
   "dependencies": {
