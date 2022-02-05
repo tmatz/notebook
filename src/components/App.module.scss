@@ -1,13 +1,21 @@
 .App {
+  padding: 0 10px;
   display: grid;
   grid-template-columns: 100%;
   grid-template-rows: auto 1fr;
   background-color: #282c34;
-  font-size: calc(10px + 2vmin);
+  font-size: medium;
   color: white;
   height: 100vh;
 
   > h1 {
     margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
+}
+
+.LogoutButton {
+  font-size: small;
 }
