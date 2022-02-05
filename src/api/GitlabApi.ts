@@ -11,8 +11,7 @@ export type UserInfo = {
   web_url: string;
 };
 
-const API_URL = "https://nxgit.hallab.co.jp/api/";
-const OAUTH_URL = "https://nxgit.hallab.co.jp/oauth/";
+const BASE_URL = "https://nxgit.hallab.co.jp";
 const ITEM_USER_INFO = "gitlab.userInfo";
 const ITEM_ACCESS_TOKEN = "gitlab.accessToken";
 
@@ -93,7 +92,7 @@ export class GitlabApi {
       code_challenge: codeChallenge,
       code_challenge_method: "S256",
     };
-    return `${OAUTH_URL}authorize?${Object.entries(query)
+    return `${BASE_URL}/oauth/authorize?${Object.entries(query)
       .map(([key, value]) => `${key}=${value}`)
       .join("&")}`;
   }
@@ -135,12 +134,9 @@ export class GitlabApi {
       code_verifier: codeVerifier,
     };
     return await window
-      .fetch(`${OAUTH_URL}token`, {
+      .fetch(`${BASE_URL}/oauth/token`, {
         method: "post",
-        body: Object.entries(body).reduce((formData, [key, value]) => {
-          formData.set(key, value);
-          return formData;
-        }, new FormData()),
+        body: new URLSearchParams(body),
       })
       .then((resp) => resp.json());
   }
@@ -176,9 +172,12 @@ export class GitlabApi {
 
   async login(username: string, token: string) {
     // 渡されたトークンでユーザー情報が取れたらログイン成功
-    const response = await fetch(`${API_URL}v4/users?username=${username}`, {
-      headers: { "PRIVATE-TOKEN": token },
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v4/users?username=${username}`,
+      {
+        headers: { "PRIVATE-TOKEN": token },
+      }
+    );
     const json = await response.json();
     const userInfo = json[0];
     this.setUserInfo(userInfo!);
@@ -192,17 +191,22 @@ export class GitlabApi {
     this.removeAccessToken();
   }
 
-  get(url: string, query?: {}) {
-    const params = new URLSearchParams(query);
-    return fetch(`${API_URL}${url}?${params}`, {
-      headers: { "PRIVATE-TOKEN": this.accessToken },
+  get(url: string, options?: { query?: {} }) {
+    const searchParams = new URLSearchParams({
+      ...(options?.query ?? {}),
+      access_token: sessionStorage.getItem("access_token")!,
     });
+    return fetch(`${BASE_URL}${url}?${searchParams}`);
   }
 
-  post(url: string) {
-    return fetch(`${API_URL}${url}`, {
+  post(url: string, options?: { query?: {}; body?: {} }) {
+    const searchParams = new URLSearchParams({
+      ...(options?.query ?? {}),
+      access_token: sessionStorage.getItem("access_token")!,
+    });
+    return fetch(`${BASE_URL}${url}?${searchParams}`, {
       method: "POST",
-      headers: { "PRIVATE-TOKEN": this.accessToken },
+      body: new URLSearchParams(options?.body),
     });
   }
 }
