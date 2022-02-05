@@ -27,7 +27,8 @@
     "remark-gfm": "^3.0.1",
     "remark-rehype": "^10.1.0",
     "unified": "^10.1.1",
-    "unist-util-inspect": "^7.0.0"
+    "unist-util-inspect": "^7.0.0",
+    "usehooks-ts": "^2.3.0"
   },
   "devDependencies": {
     "@types/node": "^17.0.13",
