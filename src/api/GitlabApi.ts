@@ -64,6 +64,10 @@ export class GitlabApi {
     return this.getUserInfo();
   }
 
+  oauth() {
+    return Promise.resolve("");
+  }
+
   async login(username: string, token: string) {
     // 渡されたトークンでユーザー情報が取れたらログイン成功
     const response = await fetch(`${API_URL}v4/users?username=${username}`, {
