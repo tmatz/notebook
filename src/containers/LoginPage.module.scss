@@ -1,0 +1,12 @@
+.LoginPage {
+  text-align: center;
+
+  .repoName {
+    color: orange;
+  }
+
+  & button {
+    padding: 10px 20px;
+    font-size: medium;
+  }
+}

@@ -1,3 +1,7 @@
+import { nanoid } from "nanoid";
+import { sha256base64 } from "~/utils/sha256";
+import appinfo from "/appinfo.json";
+
 export type UserInfo = {
   avatar_url: string;
   id: number;
@@ -8,8 +12,11 @@ export type UserInfo = {
 };
 
 const API_URL = "https://nxgit.hallab.co.jp/api/";
+const OAUTH_URL = "https://nxgit.hallab.co.jp/oauth/";
 const ITEM_USER_INFO = "gitlab.userInfo";
 const ITEM_ACCESS_TOKEN = "gitlab.accessToken";
+
+export type IGitlabApi = InstanceType<typeof GitlabApi>;
 
 export class GitlabApi {
   #userInfoStr: string | null = null;
@@ -64,8 +71,107 @@ export class GitlabApi {
     return this.getUserInfo();
   }
 
-  oauth() {
-    return Promise.resolve("");
+  isLoggedIn(): boolean {
+    return !!sessionStorage.getItem("access_token");
+  }
+
+  async getOAuthURL(): Promise<string> {
+    const state = nanoid();
+    const codeVerifier = nanoid(80);
+    const codeChallenge = await sha256base64(codeVerifier);
+    sessionStorage.setItem("state", state);
+    sessionStorage.setItem("codeVerifier", codeVerifier);
+    const redirectUri = `${window.location.origin}${
+      import.meta.env.BASE_URL
+    }login/redirect`;
+    const query = {
+      client_id: appinfo.id,
+      redirect_uri: encodeURIComponent(redirectUri),
+      response_type: "code",
+      state: state,
+      scope: "read_user+read_api+read_repository",
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+    };
+    return `${OAUTH_URL}authorize?${Object.entries(query)
+      .map(([key, value]) => `${key}=${value}`)
+      .join("&")}`;
+  }
+
+  checkOAuthCode(args: {
+    code: string | null;
+    state: string | null;
+  }): Promise<void> {
+    const { code, state } = args;
+    const savedState = sessionStorage.getItem("state");
+    if (!code || !state || state != savedState) {
+      return Promise.reject();
+    }
+    return Promise.resolve();
+  }
+
+  async requestOAuthAccessToken(
+    code: string
+  ): Promise<
+    Record<
+      | "access_token"
+      | "token_type"
+      | "expires_in"
+      | "refresh_token"
+      | "created_at",
+      string | null | undefined
+    >
+  > {
+    const codeVerifier = sessionStorage.getItem("codeVerifier")!;
+    const redirectUri = `${window.location.origin}${
+      import.meta.env.BASE_URL
+    }login/redirect`;
+    const body = {
+      client_id: appinfo.id,
+      client_secret: appinfo.secret,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
+    };
+    return await window
+      .fetch(`${OAUTH_URL}token`, {
+        method: "post",
+        body: Object.entries(body).reduce((formData, [key, value]) => {
+          formData.set(key, value);
+          return formData;
+        }, new FormData()),
+      })
+      .then((resp) => resp.json());
+  }
+
+  checkAndStoreOAuthAccessToken(args: {
+    access_token?: string | null;
+    token_type?: string | null;
+    refresh_token?: string | null;
+    created_at?: string | null;
+  }): Promise<void> {
+    const { access_token, token_type, refresh_token, created_at } = args;
+    if (access_token && token_type && refresh_token && created_at) {
+      sessionStorage.setItem("access_token", access_token);
+      sessionStorage.setItem("token_type", token_type);
+      sessionStorage.setItem("refresh_token", refresh_token);
+      sessionStorage.setItem("created_at", created_at);
+      return Promise.resolve();
+    } else {
+      this.resetOAuth();
+      return Promise.reject("wrong response");
+    }
+  }
+
+  resetOAuth(): void {
+    sessionStorage.removeItem("state");
+    sessionStorage.removeItem("codeVerifier");
+    sessionStorage.removeItem("code");
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("token_type");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("created_at");
   }
 
   async login(username: string, token: string) {
