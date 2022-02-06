@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import EditMarkdownPage from "~/containers/EditMarkdownPage";
@@ -14,7 +14,7 @@ export default function App() {
   const [isBooted, setIsBooted] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  useLayoutEffect(() => {
+  useEffect(() => {
     isMounted.current = true;
     (async () => {
       try {
