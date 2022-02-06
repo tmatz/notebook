@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
-import { logout, tryLogin } from "~/redux/modules/user";
+import { login, logout } from "~/redux/modules/user";
 
 export function useIsLoggedIn() {
   const isLoggedIn = useRootSelector((state) => state.user.isLoggedIn);
@@ -13,7 +13,7 @@ export function useLogin() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   return useCallback(async () => {
-    if (await dispatch(tryLogin())) {
+    if (await dispatch(login())) {
       navigate("/", { replace: true });
     }
   }, [dispatch]);

@@ -6,7 +6,7 @@ import LoginPage from "~/containers/LoginPage";
 import Page404 from "~/containers/Page404";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import { useIsLoggedIn, useLogout } from "~/hooks/user";
-import { boot, checkLogin } from "~/redux/modules/user";
+import { boot } from "~/redux/modules/user";
 import styles from "./App.module.scss";
 
 export default function App() {
@@ -18,15 +18,7 @@ export default function App() {
     isMounted.current = true;
     (async () => {
       try {
-        if (
-          window.location.pathname.startsWith(
-            `${import.meta.env.BASE_URL}login/redirect`
-          )
-        ) {
-          await dispatch(checkLogin());
-        } else {
-          await dispatch(boot());
-        }
+        await dispatch(boot());
         navigate("/", { replace: true });
       } catch {
         navigate("/login", { replace: true });

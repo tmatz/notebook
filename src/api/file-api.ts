@@ -17,10 +17,6 @@ export class FileApi implements IServiceApi {
     return Promise.resolve(true);
   }
 
-  checkLogin(): Promise<undefined> {
-    return Promise.resolve(undefined);
-  }
-
   logout(): Promise<void> {
     return Promise.resolve();
   }

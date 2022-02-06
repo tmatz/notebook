@@ -8,17 +8,10 @@ export const boot = createAsyncThunk<User | undefined>(
   }
 );
 
-export const tryLogin = createAsyncThunk<boolean>(
+export const login = createAsyncThunk<boolean>(
   "user/oauth",
   async (_, { extra: { serviceApi } }) => {
     return await serviceApi.login();
-  }
-);
-
-export const checkLogin = createAsyncThunk<User | undefined>(
-  "user/checkAuthorized",
-  async (_, { extra: { serviceApi } }) => {
-    return await serviceApi.checkLogin();
   }
 );
 
@@ -55,36 +48,28 @@ const slice = createSlice({
       .addCase(boot.pending, (state) => {
         state.isPending = true;
       })
-      .addCase(boot.fulfilled, (state, { payload }) => {
+      .addCase(boot.fulfilled, (state, { payload: user }) => {
         state.isLoggedIn = true;
         state.isPending = false;
-        state.user = payload as User;
+        state.user = user;
       })
       .addCase(boot.rejected, (state) => {
+        state.isLoggedIn = false;
         state.isPending = false;
+        state.user = undefined;
       })
-      .addCase(tryLogin.pending, (state) => {
+      .addCase(login.pending, (state) => {
         state.isPending = true;
       })
-      .addCase(tryLogin.fulfilled, (state, { payload }) => {
-        if (payload) {
+      .addCase(login.fulfilled, (state, { payload: success }) => {
+        if (success) {
           state.isLoggedIn = true;
           state.isPending = false;
         }
       })
-      .addCase(tryLogin.rejected, (state) => {
+      .addCase(login.rejected, (state) => {
         state.isLoggedIn = false;
         state.isPending = false;
-      })
-      .addCase(checkLogin.fulfilled, (state, { payload }) => {
-        state.isLoggedIn = true;
-        state.isPending = false;
-        state.user = payload as User;
-      })
-      .addCase(checkLogin.rejected, (state) => {
-        state.isLoggedIn = false;
-        state.isPending = false;
-        state.user = undefined;
       })
       .addCase(logout.fulfilled, (state) => {
         state.isPending = true;

@@ -48,13 +48,6 @@ export class CompositeServiceApi implements IServiceApi {
     return this.current.login();
   }
 
-  checkLogin(): Promise<User | undefined> {
-    if (!this.current) {
-      throw new Error("current service is not set");
-    }
-    return this.current.checkLogin();
-  }
-
   logout(): Promise<void> {
     if (!this.current) {
       throw new Error("current service is not set");
