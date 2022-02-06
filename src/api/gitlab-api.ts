@@ -1,12 +1,10 @@
 import { nanoid } from "nanoid";
 import { sha256base64 } from "~/utils/sha256";
-import type { IService, User } from "./serviceApi";
+import type { IServiceApi, User } from "./service-api";
 import appinfo from "/appinfo.json";
 
 const BASE_URL = "https://nxgit.hallab.co.jp";
 const SERVICE_NAME = "gitlab";
-
-export type IGitlabApi = InstanceType<typeof GitlabApi>;
 
 type RequestAccessTokenResponse = {
   access_token: string | null | undefined;
@@ -24,7 +22,7 @@ type SessionKey =
   | "refresh_token"
   | "created_at";
 
-export class GitlabApi implements IService {
+export class GitlabApi implements IServiceApi {
   get serviceName() {
     return "gitlab";
   }

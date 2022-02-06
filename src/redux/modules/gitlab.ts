@@ -1,31 +1,31 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createAsyncThunk } from "~/redux/modules";
 
-export const boot = createAsyncThunk<User>(
+export const boot = createAsyncThunk<User | undefined>(
   "boot",
-  async (_, { extra: { gitlabApi } }) => {
-    return await gitlabApi.boot();
+  async (_, { extra: { serviceApi } }) => {
+    return await serviceApi.boot();
   }
 );
 
 export const tryLogin = createAsyncThunk<void>(
   "oauth",
-  async (_, { extra: { gitlabApi } }) => {
-    await gitlabApi.login();
+  async (_, { extra: { serviceApi } }) => {
+    await serviceApi.login();
   }
 );
 
-export const checkLogin = createAsyncThunk<User>(
+export const checkLogin = createAsyncThunk<User | undefined>(
   "checkAuthorized",
-  async (_, { extra: { gitlabApi } }) => {
-    return await gitlabApi.checkLogin();
+  async (_, { extra: { serviceApi } }) => {
+    return await serviceApi.checkLogin();
   }
 );
 
 export const logout = createAsyncThunk(
   "logout",
-  (_, { extra: { gitlabApi } }) => {
-    gitlabApi.logout();
+  (_, { extra: { serviceApi } }) => {
+    serviceApi.logout();
   }
 );
 
