@@ -74,6 +74,17 @@ export class GitlabApi {
     return !!sessionStorage.getItem("access_token");
   }
 
+  async boot(): Promise<any> {
+    if (!this.isLoggedIn()) {
+      return Promise.reject();
+    }
+    const user = await this.get("/api/v4/user");
+    if (!user) {
+      return Promise.reject();
+    }
+    return user;
+  }
+
   async getOAuthURL(): Promise<string> {
     const state = nanoid();
     const codeVerifier = nanoid(80);
@@ -191,12 +202,18 @@ export class GitlabApi {
     this.removeAccessToken();
   }
 
+  getCurrentUserInfo(): Promise<object> {
+    return this.get("/api/v4/user");
+  }
+
   get(url: string, options?: { query?: {} }) {
     const searchParams = new URLSearchParams({
       ...(options?.query ?? {}),
       access_token: sessionStorage.getItem("access_token")!,
     });
-    return fetch(`${BASE_URL}${url}?${searchParams}`);
+    return fetch(`${BASE_URL}${url}?${searchParams}`).then((resp) =>
+      resp.json()
+    );
   }
 
   post(url: string, options?: { query?: {}; body?: {} }) {
@@ -207,6 +224,6 @@ export class GitlabApi {
     return fetch(`${BASE_URL}${url}?${searchParams}`, {
       method: "POST",
       body: new URLSearchParams(options?.body),
-    });
+    }).then((resp) => resp.json());
   }
 }

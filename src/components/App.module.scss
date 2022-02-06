@@ -12,10 +12,24 @@
     margin: 10px 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+    }
   }
 }
 
-.LogoutButton {
+.UserName {
   font-size: small;
+  color: white;
+  background-color: transparent;
+  border: 0;
+}
+
+.LogoutButton {
+  display: inline-flex;
+  color: inherit;
+  background-color: transparent;
+  border: 0;
 }
