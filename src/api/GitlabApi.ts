@@ -1,169 +1,132 @@
 import { nanoid } from "nanoid";
 import { sha256base64 } from "~/utils/sha256";
+import type { IService, User } from "./serviceApi";
 import appinfo from "/appinfo.json";
 
-export type UserInfo = {
-  avatar_url: string;
-  id: number;
-  name: string;
-  state: string;
-  username: string;
-  web_url: string;
-};
-
 const BASE_URL = "https://nxgit.hallab.co.jp";
-const ITEM_USER_INFO = "gitlab.userInfo";
-const ITEM_ACCESS_TOKEN = "gitlab.accessToken";
+const SERVICE_NAME = "gitlab";
 
 export type IGitlabApi = InstanceType<typeof GitlabApi>;
 
-export class GitlabApi {
-  #userInfoStr: string | null = null;
-  #userInfo: UserInfo | null = null;
-  #accessToken: string | null = null;
+type RequestAccessTokenResponse = {
+  access_token: string | null | undefined;
+  token_type: string | null | undefined;
+  refresh_token: string | null | undefined;
+  created_at: string | null | undefined;
+};
 
-  private getUserInfo(): UserInfo | null {
-    const value = localStorage.getItem(ITEM_USER_INFO);
-    if (value !== this.#userInfoStr) {
-      this.#userInfoStr = value;
-      this.#userInfo = value ? JSON.parse(value) : null;
-    }
-    return this.#userInfo;
-  }
+type SessionKey =
+  | "state"
+  | "code_verifier"
+  | "code"
+  | "access_token"
+  | "token_type"
+  | "refresh_token"
+  | "created_at";
 
-  private setUserInfo(userInfo: UserInfo) {
-    const value = JSON.stringify(userInfo);
-    if (value !== this.#userInfoStr) {
-      this.#userInfoStr = value;
-      this.#userInfo = userInfo;
-      localStorage.setItem(ITEM_USER_INFO, value);
-    }
-  }
-
-  private removeUserInfo() {
-    localStorage.removeItem(ITEM_USER_INFO);
-    this.#userInfoStr = null;
-    this.#userInfo = null;
-  }
-
-  private getAccessToken(): string | null {
-    return localStorage.getItem(ITEM_ACCESS_TOKEN);
-  }
-
-  private setAccessToken(accessToken: string) {
-    localStorage.setItem(ITEM_ACCESS_TOKEN, accessToken);
-  }
-
-  private removeAccessToken() {
-    localStorage.removeItem("gitlab.accessToken");
-  }
-
-  private get accessToken() {
-    if (!this.#accessToken) {
-      throw new Error("no access token");
-    }
-    return this.#accessToken;
-  }
-
-  checkLogin() {
-    this.#accessToken = this.getAccessToken();
-    return this.getUserInfo();
+export class GitlabApi implements IService {
+  get serviceName() {
+    return "gitlab";
   }
 
   isLoggedIn(): boolean {
-    return !!sessionStorage.getItem("access_token");
+    return !!getSessionValue("access_token");
   }
 
-  async boot(): Promise<any> {
+  async boot(): Promise<User> {
     if (!this.isLoggedIn()) {
       return Promise.reject();
     }
-    const user = await this.get("/api/v4/user");
-    if (!user) {
-      return Promise.reject();
-    }
-    return user;
+    return await this.getCurrentUser();
   }
 
-  async getOAuthURL(): Promise<string> {
+  async login(): Promise<void> {
+    const url = await this.getOAuthCodeURL();
+    window.location.href = url;
+  }
+
+  async checkLogin(): Promise<User> {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get("code");
+      const state = searchParams.get("state");
+      await this.checkOAuthCode({ code, state });
+      const json = await this.requestOAuthAccessToken(code!);
+      await this.checkAndStoreOAuthAccessToken(json);
+      const user = await this.getCurrentUser();
+      return user;
+    } catch {
+      this.resetOAuth();
+      return Promise.reject("wrong response");
+    }
+  }
+
+  logout(): Promise<void> {
+    this.resetOAuth();
+    return Promise.resolve();
+  }
+
+  private async getOAuthCodeURL(): Promise<string> {
     const state = nanoid();
-    const codeVerifier = nanoid(80);
-    const codeChallenge = await sha256base64(codeVerifier);
-    sessionStorage.setItem("state", state);
-    sessionStorage.setItem("codeVerifier", codeVerifier);
-    const redirectUri = `${window.location.origin}${
+    const code_verifier = nanoid(80);
+    const code_challenge = await sha256base64(code_verifier);
+    setSessionValue("state", state);
+    setSessionValue("code_verifier", code_verifier);
+    const redirect_uri = `${window.location.origin}${
       import.meta.env.BASE_URL
     }login/redirect`;
     const query = {
       client_id: appinfo.id,
-      redirect_uri: encodeURIComponent(redirectUri),
+      redirect_uri: encodeURIComponent(redirect_uri),
       response_type: "code",
       state: state,
       scope: "read_user+read_api+read_repository",
-      code_challenge: codeChallenge,
+      code_challenge,
       code_challenge_method: "S256",
     };
-    return `${BASE_URL}/oauth/authorize?${Object.entries(query)
-      .map(([key, value]) => `${key}=${value}`)
-      .join("&")}`;
+    return `${BASE_URL}/oauth/authorize?${new URLSearchParams(query)}`;
   }
 
-  checkOAuthCode(args: {
+  private checkOAuthCode(args: {
     code: string | null;
     state: string | null;
   }): Promise<void> {
     const { code, state } = args;
-    const savedState = sessionStorage.getItem("state");
+    const savedState = getSessionValue("state");
     if (!code || !state || state != savedState) {
       return Promise.reject();
     }
     return Promise.resolve();
   }
 
-  async requestOAuthAccessToken(
+  private async requestOAuthAccessToken(
     code: string
-  ): Promise<
-    Record<
-      | "access_token"
-      | "token_type"
-      | "expires_in"
-      | "refresh_token"
-      | "created_at",
-      string | null | undefined
-    >
-  > {
-    const codeVerifier = sessionStorage.getItem("codeVerifier")!;
-    const redirectUri = `${window.location.origin}${
+  ): Promise<RequestAccessTokenResponse> {
+    const code_verifier = getSessionValue("code_verifier")!;
+    const redirect_uri = `${window.location.origin}${
       import.meta.env.BASE_URL
     }login/redirect`;
-    const body = {
-      client_id: appinfo.id,
-      client_secret: appinfo.secret,
-      code,
-      grant_type: "authorization_code",
-      redirect_uri: redirectUri,
-      code_verifier: codeVerifier,
-    };
-    return await window
-      .fetch(`${BASE_URL}/oauth/token`, {
-        method: "post",
-        body: new URLSearchParams(body),
-      })
-      .then((resp) => resp.json());
+    return await this.post("/oauth/token", {
+      body: {
+        client_id: appinfo.id,
+        client_secret: appinfo.secret,
+        code,
+        grant_type: "authorization_code",
+        redirect_uri,
+        code_verifier,
+      },
+    });
   }
 
-  checkAndStoreOAuthAccessToken(args: {
-    access_token?: string | null;
-    token_type?: string | null;
-    refresh_token?: string | null;
-    created_at?: string | null;
-  }): Promise<void> {
+  private checkAndStoreOAuthAccessToken(
+    args: RequestAccessTokenResponse
+  ): Promise<void> {
     const { access_token, token_type, refresh_token, created_at } = args;
     if (access_token && token_type && refresh_token && created_at) {
-      sessionStorage.setItem("access_token", access_token);
-      sessionStorage.setItem("token_type", token_type);
-      sessionStorage.setItem("refresh_token", refresh_token);
-      sessionStorage.setItem("created_at", created_at);
+      setSessionValue("access_token", access_token);
+      setSessionValue("token_type", token_type);
+      setSessionValue("refresh_token", refresh_token);
+      setSessionValue("created_at", created_at);
       return Promise.resolve();
     } else {
       this.resetOAuth();
@@ -171,59 +134,51 @@ export class GitlabApi {
     }
   }
 
-  resetOAuth(): void {
-    sessionStorage.removeItem("state");
-    sessionStorage.removeItem("codeVerifier");
-    sessionStorage.removeItem("code");
-    sessionStorage.removeItem("access_token");
-    sessionStorage.removeItem("token_type");
-    sessionStorage.removeItem("refresh_token");
-    sessionStorage.removeItem("created_at");
+  private resetOAuth(): void {
+    removeSessionValue("state");
+    removeSessionValue("code_verifier");
+    removeSessionValue("code");
+    removeSessionValue("access_token");
+    removeSessionValue("token_type");
+    removeSessionValue("refresh_token");
+    removeSessionValue("created_at");
   }
 
-  async login(username: string, token: string) {
-    // 渡されたトークンでユーザー情報が取れたらログイン成功
-    const response = await fetch(
-      `${BASE_URL}/api/v4/users?username=${username}`,
-      {
-        headers: { "PRIVATE-TOKEN": token },
-      }
-    );
-    const json = await response.json();
-    const userInfo = json[0];
-    this.setUserInfo(userInfo!);
-    this.setAccessToken(token);
-    return userInfo!;
-  }
-
-  logout() {
-    this.#accessToken = null;
-    this.removeUserInfo();
-    this.removeAccessToken();
-  }
-
-  getCurrentUserInfo(): Promise<object> {
+  private getCurrentUser(): Promise<User> {
     return this.get("/api/v4/user");
   }
 
-  get(url: string, options?: { query?: {} }) {
-    const searchParams = new URLSearchParams({
-      ...(options?.query ?? {}),
-      access_token: sessionStorage.getItem("access_token")!,
-    });
-    return fetch(`${BASE_URL}${url}?${searchParams}`).then((resp) =>
-      resp.json()
-    );
+  private async get(url: string, options: { query?: {} } = {}): Promise<any> {
+    const { query } = options;
+    const access_token = getSessionValue("access_token")!;
+    const searchParams = new URLSearchParams({ ...query, access_token });
+    const resp = await fetch(`${BASE_URL}${url}?${searchParams}`);
+    return await resp.json();
   }
 
-  post(url: string, options?: { query?: {}; body?: {} }) {
-    const searchParams = new URLSearchParams({
-      ...(options?.query ?? {}),
-      access_token: sessionStorage.getItem("access_token")!,
-    });
-    return fetch(`${BASE_URL}${url}?${searchParams}`, {
+  private async post(
+    url: string,
+    options: { query?: {}; body?: {} } = {}
+  ): Promise<any> {
+    const { query, body } = options;
+    const access_token = getSessionValue("access_token")!;
+    const searchParams = new URLSearchParams({ ...query, access_token });
+    const resp = await fetch(`${BASE_URL}${url}?${searchParams}`, {
       method: "POST",
-      body: new URLSearchParams(options?.body),
-    }).then((resp) => resp.json());
+      body: new URLSearchParams(body),
+    });
+    return await resp.json();
   }
+}
+
+function getSessionValue(key: SessionKey): string | null {
+  return sessionStorage.getItem(`${SERVICE_NAME}/${key}`);
+}
+
+function setSessionValue(key: SessionKey, value: string) {
+  sessionStorage.setItem(`${SERVICE_NAME}/${key}`, value);
+}
+
+function removeSessionValue(key: SessionKey) {
+  return sessionStorage.removeItem(`${SERVICE_NAME}/${key}`);
 }

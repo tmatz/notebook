@@ -8,34 +8,24 @@ export const boot = createAsyncThunk<User>(
   }
 );
 
-export const tryLogin = createAsyncThunk<string>(
+export const tryLogin = createAsyncThunk<void>(
   "oauth",
   async (_, { extra: { gitlabApi } }) => {
-    return await gitlabApi.getOAuthURL();
+    await gitlabApi.login();
   }
 );
 
-export const checkLogin = createAsyncThunk<
-  object,
-  { code: string | null; state: string | null }
->("checkAuthorized", async (args, { extra: { gitlabApi } }) => {
-  try {
-    const { code, state } = args;
-    await gitlabApi.checkOAuthCode({ code, state });
-    const json = await gitlabApi.requestOAuthAccessToken(code!);
-    await gitlabApi.checkAndStoreOAuthAccessToken(json);
-    const userInfo = await gitlabApi.getCurrentUserInfo();
-    return userInfo;
-  } catch {
-    gitlabApi.resetOAuth();
-    return Promise.reject("wrong response");
+export const checkLogin = createAsyncThunk<User>(
+  "checkAuthorized",
+  async (_, { extra: { gitlabApi } }) => {
+    return await gitlabApi.checkLogin();
   }
-});
+);
 
 export const logout = createAsyncThunk(
   "logout",
   (_, { extra: { gitlabApi } }) => {
-    gitlabApi.resetOAuth();
+    gitlabApi.logout();
   }
 );
 
