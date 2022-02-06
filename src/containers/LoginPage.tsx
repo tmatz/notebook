@@ -1,4 +1,4 @@
-import { useLogin } from "~/hooks/gitlab";
+import { useLogin } from "~/hooks/user";
 import styles from "./LoginPage.module.scss";
 
 export default function LoginPage() {

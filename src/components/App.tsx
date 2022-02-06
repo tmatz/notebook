@@ -3,12 +3,10 @@ import { MdLogout } from "react-icons/md";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import EditMarkdownPage from "~/containers/EditMarkdownPage";
 import LoginPage from "~/containers/LoginPage";
-import { useIsLoggedIn, useLogout } from "~/hooks/gitlab";
-import { checkLogin } from "~/redux/modules/gitlab";
-import OAuthRedirectPage from "../containers/OAuthRedirectPage";
-import Page404 from "../containers/Page404";
-import { useAppDispatch, useRootSelector } from "../hooks/store";
-import { boot } from "../redux/modules/gitlab";
+import Page404 from "~/containers/Page404";
+import { useAppDispatch, useRootSelector } from "~/hooks/store";
+import { useIsLoggedIn, useLogout } from "~/hooks/user";
+import { boot } from "~/redux/modules/user";
 import styles from "./App.module.scss";
 
 export default function App() {
@@ -19,17 +17,11 @@ export default function App() {
   useLayoutEffect(() => {
     isMounted.current = true;
     (async () => {
-      if (
-        window.location.pathname.startsWith(
-          `${import.meta.env.BASE_URL}login/redirect`
-        )
-      ) {
-        await dispatch(checkLogin());
-      } else {
-        await dispatch(boot())
-          .unwrap()
-          .then(() => navigate("/", { replace: true }))
-          .catch(() => navigate("/login", { replace: true }));
+      try {
+        await dispatch(boot());
+        navigate("/", { replace: true });
+      } catch {
+        navigate("/login", { replace: true });
       }
       if (isMounted.current) {
         setIsBooted(true);
@@ -60,7 +52,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<EditMarkdownPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/login/redirect" element={<OAuthRedirectPage />} />
         <Route path="*" element={<Page404 />} />
       </Routes>
     </div>
@@ -68,8 +59,8 @@ export default function App() {
 }
 
 function UserName() {
-  const name = useRootSelector((state) => state.gitlab.user?.name);
-  const username = useRootSelector((state) => state.gitlab.user?.username);
+  const name = useRootSelector((state) => state.user.user?.name);
+  const username = useRootSelector((state) => state.user.user?.username);
   if (!username) return null;
   return (
     <button

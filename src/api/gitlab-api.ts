@@ -32,7 +32,13 @@ export class GitlabApi implements IServiceApi {
   }
 
   async boot(): Promise<User> {
-    if (!this.isLoggedIn()) {
+    if (
+      window.location.pathname.startsWith(
+        `${import.meta.env.BASE_URL}login/redirect`
+      )
+    ) {
+      await this.checkLogin();
+    } else if (!this.isLoggedIn()) {
       return Promise.reject();
     }
     return await this.getCurrentUser();
@@ -44,7 +50,7 @@ export class GitlabApi implements IServiceApi {
     return false;
   }
 
-  async checkLogin(): Promise<User> {
+  private async checkLogin(): Promise<void> {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
@@ -52,8 +58,6 @@ export class GitlabApi implements IServiceApi {
       await this.checkOAuthCode({ code, state });
       const json = await this.requestOAuthAccessToken(code!);
       await this.checkAndStoreOAuthAccessToken(json);
-      const user = await this.getCurrentUser();
-      return user;
     } catch {
       this.resetOAuth();
       return Promise.reject("wrong response");
