@@ -8,10 +8,10 @@ export const boot = createAsyncThunk<User | undefined>(
   }
 );
 
-export const tryLogin = createAsyncThunk<void>(
+export const tryLogin = createAsyncThunk<boolean>(
   "oauth",
   async (_, { extra: { serviceApi } }) => {
-    await serviceApi.login();
+    return await serviceApi.login();
   }
 );
 
@@ -65,6 +65,12 @@ const slice = createSlice({
       })
       .addCase(tryLogin.pending, (state) => {
         state.isPending = true;
+      })
+      .addCase(tryLogin.fulfilled, (state, { payload }) => {
+        if (payload) {
+          state.isLoggedIn = true;
+          state.isPending = false;
+        }
       })
       .addCase(tryLogin.rejected, (state) => {
         state.isLoggedIn = false;

@@ -7,7 +7,8 @@ export interface IServiceApi {
   get serviceName(): string;
   isLoggedIn(): boolean;
   boot(): Promise<User | undefined>;
-  login(): Promise<void>;
+  /** @return succss: true, pending: false, error: failed */
+  login(): Promise<boolean>;
   checkLogin(): Promise<User | undefined>;
   logout(): Promise<void>;
 }

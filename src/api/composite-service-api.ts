@@ -41,7 +41,7 @@ export class CompositeServiceApi implements IServiceApi {
     return this.current.boot();
   }
 
-  login(): Promise<void> {
+  login(): Promise<boolean> {
     if (!this.current) {
       throw new Error("current service is not set");
     }

@@ -38,9 +38,10 @@ export class GitlabApi implements IServiceApi {
     return await this.getCurrentUser();
   }
 
-  async login(): Promise<void> {
+  async login(): Promise<false> {
     const url = await this.getOAuthCodeURL();
     window.location.href = url;
+    return false;
   }
 
   async checkLogin(): Promise<User> {

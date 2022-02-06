@@ -10,6 +10,8 @@ export default function LoginPage() {
       <button onClick={onClick}>
         Login by <span className={styles.repoName}>{repoName}</span>
       </button>
+      <h2>or</h2>
+      <button onClick={onClick}>Open File</button>
     </div>
   );
 }

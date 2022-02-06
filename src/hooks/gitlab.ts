@@ -13,8 +13,9 @@ export function useLogin() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   return useCallback(async () => {
-    await dispatch(tryLogin());
-    navigate("/", { replace: true });
+    if (await dispatch(tryLogin())) {
+      navigate("/", { replace: true });
+    }
   }, [dispatch]);
 }
 

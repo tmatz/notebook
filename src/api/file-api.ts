@@ -13,8 +13,8 @@ export class FileApi implements IServiceApi {
     return Promise.resolve(undefined);
   }
 
-  login(): Promise<void> {
-    return Promise.resolve();
+  login(): Promise<true> {
+    return Promise.resolve(true);
   }
 
   checkLogin(): Promise<undefined> {
