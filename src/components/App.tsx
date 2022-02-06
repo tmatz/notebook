@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import EditMarkdownPage from "~/containers/EditMarkdownPage";
 import LoginPage from "~/containers/LoginPage";
 import { useIsLoggedIn, useLogout } from "~/hooks/gitlab";
+import { checkLogin } from "~/redux/modules/gitlab";
 import OAuthRedirectPage from "../containers/OAuthRedirectPage";
 import Page404 from "../containers/Page404";
 import { useAppDispatch, useRootSelector } from "../hooks/store";
@@ -11,36 +12,42 @@ import { boot } from "../redux/modules/gitlab";
 import styles from "./App.module.scss";
 
 export default function App() {
-  const isMouted = useRef(false);
+  const isMounted = useRef(false);
   const [isBooted, setIsBooted] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  useEffect(() => {
-    isMouted.current = true;
-    if (
-      window.location.pathname.startsWith(
-        `${import.meta.env.BASE_URL}login/redirect`
-      )
-    ) {
-      setIsBooted(true);
-      return;
-    }
-
-    dispatch(boot())
-      .unwrap()
-      .then(() => navigate("/", { replace: true }))
-      .catch(() => navigate("/login", { replace: true }))
-      .then(() => {
-        if (isMouted.current) {
-          setIsBooted(true);
-        }
-      });
-
+  useLayoutEffect(() => {
+    isMounted.current = true;
+    (async () => {
+      if (
+        window.location.pathname.startsWith(
+          `${import.meta.env.BASE_URL}login/redirect`
+        )
+      ) {
+        await dispatch(checkLogin());
+      } else {
+        await dispatch(boot())
+          .unwrap()
+          .then(() => navigate("/", { replace: true }))
+          .catch(() => navigate("/login", { replace: true }));
+      }
+      if (isMounted.current) {
+        setIsBooted(true);
+      }
+    })();
     return () => {
-      isMouted.current = false;
+      isMounted.current = false;
     };
   }, []);
-  useEffect(() => {});
+  if (!isBooted) {
+    return (
+      <div className={styles.App}>
+        <h1>
+          <span>Notebook</span>
+        </h1>
+      </div>
+    );
+  }
   return (
     <div className={styles.App}>
       <h1>

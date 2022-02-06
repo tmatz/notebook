@@ -1,41 +1,31 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createAsyncThunk } from "~/redux/modules";
 
-export const boot = createAsyncThunk<User>(
+export const boot = createAsyncThunk<User | undefined>(
   "boot",
-  async (_, { extra: { gitlabApi } }) => {
-    return await gitlabApi.boot();
+  async (_, { extra: { serviceApi } }) => {
+    return await serviceApi.boot();
   }
 );
 
-export const tryLogin = createAsyncThunk<string>(
+export const tryLogin = createAsyncThunk<boolean>(
   "oauth",
-  async (_, { extra: { gitlabApi } }) => {
-    return await gitlabApi.getOAuthURL();
+  async (_, { extra: { serviceApi } }) => {
+    return await serviceApi.login();
   }
 );
 
-export const checkLogin = createAsyncThunk<
-  object,
-  { code: string | null; state: string | null }
->("checkAuthorized", async (args, { extra: { gitlabApi } }) => {
-  try {
-    const { code, state } = args;
-    await gitlabApi.checkOAuthCode({ code, state });
-    const json = await gitlabApi.requestOAuthAccessToken(code!);
-    await gitlabApi.checkAndStoreOAuthAccessToken(json);
-    const userInfo = await gitlabApi.getCurrentUserInfo();
-    return userInfo;
-  } catch {
-    gitlabApi.resetOAuth();
-    return Promise.reject("wrong response");
+export const checkLogin = createAsyncThunk<User | undefined>(
+  "checkAuthorized",
+  async (_, { extra: { serviceApi } }) => {
+    return await serviceApi.checkLogin();
   }
-});
+);
 
 export const logout = createAsyncThunk(
   "logout",
-  (_, { extra: { gitlabApi } }) => {
-    gitlabApi.resetOAuth();
+  (_, { extra: { serviceApi } }) => {
+    serviceApi.logout();
   }
 );
 
@@ -75,6 +65,12 @@ const slice = createSlice({
       })
       .addCase(tryLogin.pending, (state) => {
         state.isPending = true;
+      })
+      .addCase(tryLogin.fulfilled, (state, { payload }) => {
+        if (payload) {
+          state.isLoggedIn = true;
+          state.isPending = false;
+        }
       })
       .addCase(tryLogin.rejected, (state) => {
         state.isLoggedIn = false;

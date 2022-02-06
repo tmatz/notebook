@@ -2,18 +2,21 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
+import { CompositeServiceApi } from "~/api/composite-service-api";
+import { FileApi } from "~/api/file-api";
+import { GitlabApi } from "~/api/gitlab-api";
 import App from "~/components/App";
 import { createStore } from "~/redux/store";
-import { GitlabApi } from "./api/GitlabApi";
 import "./index.css";
 
-const gitlabApi = new GitlabApi();
+const serviceApi = new CompositeServiceApi([new GitlabApi(), new FileApi()]);
+serviceApi.setCurrent("file");
 
 const basename = import.meta.env.BASE_URL;
 
 ReactDOM.render(
   <React.StrictMode>
-    <Provider store={createStore({ gitlabApi })}>
+    <Provider store={createStore({ serviceApi })}>
       <BrowserRouter basename={basename}>
         <App />
       </BrowserRouter>
