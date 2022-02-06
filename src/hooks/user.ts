@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
-import { checkLogin, logout, tryLogin } from "../redux/modules/gitlab";
+import { checkLogin, logout, tryLogin } from "~/redux/modules/user";
 
 export function useIsLoggedIn() {
-  const isLoggedIn = useRootSelector((state) => state.gitlab.isLoggedIn);
-  const isPending = useRootSelector((state) => state.gitlab.isPending);
+  const isLoggedIn = useRootSelector((state) => state.user.isLoggedIn);
+  const isPending = useRootSelector((state) => state.user.isPending);
   return [isLoggedIn, isPending];
 }
 

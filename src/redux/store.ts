@@ -1,15 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
 import { IServiceApi } from "~/api/service-api";
-import gitlabSlice from "./modules/gitlab";
 import markdownSlice from "./modules/markdown";
+import userSlice from "./modules/user";
 
 export function createStore(extraArgument: { serviceApi: IServiceApi }) {
   const epicMiddleware = createEpicMiddleware();
 
   return configureStore({
     reducer: {
-      gitlab: gitlabSlice.reducer,
+      user: userSlice.reducer,
       markdown: markdownSlice.reducer,
     },
     middleware: (getDefaultMiddlewares) =>

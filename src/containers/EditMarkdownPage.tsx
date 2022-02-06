@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MarkdownEditor from "~/components/MarkdownEditor";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import * as markdown from "~/redux/modules/markdown";
-import { useIsLoggedIn } from "../hooks/gitlab";
+import { useIsLoggedIn } from "../hooks/user";
 
 export default function EditMarkdownPage() {
   const [isLoggedIn] = useIsLoggedIn();
