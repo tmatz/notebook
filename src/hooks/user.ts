@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
-import { checkLogin, logout, tryLogin } from "~/redux/modules/user";
+import { logout, tryLogin } from "~/redux/modules/user";
 
 export function useIsLoggedIn() {
   const isLoggedIn = useRootSelector((state) => state.user.isLoggedIn);
@@ -17,17 +17,6 @@ export function useLogin() {
       navigate("/", { replace: true });
     }
   }, [dispatch]);
-}
-
-export function useCheckLogin() {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(checkLogin())
-      .unwrap()
-      .then(() => navigate("/", { replace: true }))
-      .catch(() => navigate("/login", { replace: true }));
-  }, []);
 }
 
 export function useLogout() {
