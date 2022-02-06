@@ -1,0 +1,23 @@
+{
+  "$id": "appinfo.schema.json",
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "application registration information",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "enum": ["appinfo.schema.json"]
+    },
+    "service": {
+      "enum": ["gitlab"],
+      "description": "supported service name"
+    },
+    "id": {
+      "type": "string"
+    },
+    "secret": {
+      "type": "string"
+    }
+  },
+  "required": ["$schema", "service", "id", "secret"],
+  "additionalProperties": false
+}
