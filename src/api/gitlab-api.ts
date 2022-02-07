@@ -98,6 +98,7 @@ export class GitlabApi implements IServiceApi {
   }): Promise<void> {
     const { code, state } = args;
     const savedState = getSessionValue("state");
+    removeSessionValue("state");
     if (!code || !state || state != savedState) {
       return Promise.reject();
     }
@@ -108,6 +109,7 @@ export class GitlabApi implements IServiceApi {
     code: string
   ): Promise<RequestAccessTokenResponse> {
     const code_verifier = getSessionValue("code_verifier")!;
+    removeSessionValue("code_verifier");
     const redirect_uri = `${window.location.origin}${
       import.meta.env.BASE_URL
     }login/redirect`;
