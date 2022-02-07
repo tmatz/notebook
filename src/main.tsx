@@ -1,3 +1,4 @@
+import { ChakraProvider } from "@chakra-ui/react";
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
@@ -16,9 +17,11 @@ const basename = import.meta.env.BASE_URL;
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={createStore({ serviceApi })}>
-      <BrowserRouter basename={basename}>
-        <App />
-      </BrowserRouter>
+      <ChakraProvider>
+        <BrowserRouter basename={basename}>
+          <App />
+        </BrowserRouter>
+      </ChakraProvider>
     </Provider>
   </React.StrictMode>,
   document.getElementById("root")
