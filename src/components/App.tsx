@@ -1,34 +1,34 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import EditMarkdownPage from "~/containers/EditMarkdownPage";
 import LoginPage from "~/containers/LoginPage";
 import Page404 from "~/containers/Page404";
+import { useAppNavigate } from "~/hooks/app-navigate";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import { useIsLoggedIn, useLogout } from "~/hooks/user";
 import { boot } from "~/redux/modules/user";
 import styles from "./App.module.scss";
 
 export default function App() {
-  const isMounted = useRef(false);
-  const [isBooted, setIsBooted] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const dispatch = useAppDispatch();
+  const [isBooted, setIsBooted] = useState(false);
   useEffect(() => {
-    isMounted.current = true;
+    let isMounted = true;
     (async () => {
       try {
         await dispatch(boot());
-        navigate("/", { replace: true });
+        navigate.replace("/");
       } catch {
-        navigate("/login", { replace: true });
+        navigate.replace("/login");
       }
-      if (isMounted.current) {
+      if (isMounted) {
         setIsBooted(true);
       }
     })();
     return () => {
-      isMounted.current = false;
+      isMounted = false;
     };
   }, []);
   if (!isBooted) {

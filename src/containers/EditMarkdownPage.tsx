@@ -1,16 +1,16 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import MarkdownEditor from "~/components/MarkdownEditor";
+import { useAppNavigate } from "~/hooks/app-navigate";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import * as markdown from "~/redux/modules/markdown";
 import { useIsLoggedIn } from "../hooks/user";
 
 export default function EditMarkdownPage() {
   const [isLoggedIn] = useIsLoggedIn();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate("/login", { replace: true });
+      navigate.replace("/login");
     }
   }, [isLoggedIn]);
   return isLoggedIn ? <Connect /> : null;

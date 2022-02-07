@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAppNavigate } from "~/hooks/app-navigate";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import { login, logout } from "~/redux/modules/user";
 
@@ -11,11 +11,11 @@ export function useIsLoggedIn() {
 
 export function useLogin() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   return useCallback(
     async (serviceName: string) => {
       if (await dispatch(login(serviceName))) {
-        navigate("/", { replace: true });
+        navigate.replace("/");
       }
     },
     [dispatch]
@@ -24,10 +24,10 @@ export function useLogin() {
 
 export function useLogout() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   return useCallback(() => {
     dispatch(logout())
       .unwrap()
-      .then(() => navigate("/login", { replace: true }));
+      .then(() => navigate.replace("/login"));
   }, []);
 }

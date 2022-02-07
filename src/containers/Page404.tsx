@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAppNavigate } from "~/hooks/app-navigate";
 
 export default function Page404() {
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   useEffect(() => {
     const TIMEOUT = 10 * 1000;
     const timeout = setTimeout(() => {
-      navigate("/", { replace: true });
+      navigate.replace("/");
     }, TIMEOUT);
     return () => clearTimeout(timeout);
   }, []);
