@@ -4,5 +4,6 @@ coverage
 dist
 dist-ssr
 *.local
+*.swp
 appinfo.json
 stats.html
