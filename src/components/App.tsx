@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import EditMarkdownPage from "~/containers/EditMarkdownPage";
@@ -10,12 +10,11 @@ import { boot } from "~/redux/modules/user";
 import styles from "./App.module.scss";
 
 export default function App() {
-  const isMounted = useRef(false);
-  const [isBooted, setIsBooted] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [isBooted, setIsBooted] = useState(false);
   useEffect(() => {
-    isMounted.current = true;
+    let isMounted = true;
     (async () => {
       try {
         await dispatch(boot());
@@ -23,12 +22,12 @@ export default function App() {
       } catch {
         navigate("/login", { replace: true });
       }
-      if (isMounted.current) {
+      if (isMounted) {
         setIsBooted(true);
       }
     })();
     return () => {
-      isMounted.current = false;
+      isMounted = false;
     };
   }, []);
   if (!isBooted) {
