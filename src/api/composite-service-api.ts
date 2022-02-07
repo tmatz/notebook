@@ -1,5 +1,9 @@
 import { IServiceApi, User } from "./service-api";
 
+const SERVICE_NAME = "composite_service";
+
+type SessionKey = "serviceName";
+
 export class CompositeServiceApi implements IServiceApi {
   #services: IServiceApi[];
   #current?: IServiceApi;
@@ -16,8 +20,13 @@ export class CompositeServiceApi implements IServiceApi {
     return this.#current;
   }
 
-  setCurrent(name: string) {
-    this.#current = this.services.find((s) => s.serviceName === name);
+  setCurrent(serviceName: string) {
+    this.#current = this.services.find((s) => s.serviceName === serviceName);
+    if (!this.#current) {
+      removeSessionValue("serviceName");
+      throw new Error("service not found");
+    }
+    setSessionValue("serviceName", serviceName);
   }
 
   get serviceName(): string {
@@ -28,17 +37,18 @@ export class CompositeServiceApi implements IServiceApi {
   }
 
   isLoggedIn(): boolean {
-    if (!this.current) {
-      throw new Error("current service is not set");
-    }
-    return this.current?.isLoggedIn()!;
+    return !!this.current?.isLoggedIn()!;
   }
 
   boot(): Promise<User | undefined> {
     if (!this.current) {
-      throw new Error("current service is not set");
+      const serviceName = getSessionValue("serviceName");
+      if (!serviceName) {
+        throw new Error("current service is not set");
+      }
+      this.setCurrent(serviceName);
     }
-    return this.current.boot();
+    return this.current!.boot();
   }
 
   login(): Promise<boolean> {
@@ -48,10 +58,27 @@ export class CompositeServiceApi implements IServiceApi {
     return this.current.login();
   }
 
-  logout(): Promise<void> {
+  async logout(): Promise<void> {
     if (!this.current) {
       throw new Error("current service is not set");
     }
-    return this.current.logout();
+    try {
+      await this.current.logout();
+    } finally {
+      this.#current = undefined;
+      removeSessionValue("serviceName");
+    }
   }
+}
+
+function getSessionValue(key: SessionKey): string | null {
+  return sessionStorage.getItem(`notebook/${SERVICE_NAME}/${key}`);
+}
+
+function setSessionValue(key: SessionKey, value: string) {
+  sessionStorage.setItem(`notebook/${SERVICE_NAME}/${key}`, value);
+}
+
+function removeSessionValue(key: SessionKey) {
+  return sessionStorage.removeItem(`notebook/${SERVICE_NAME}/${key}`);
 }

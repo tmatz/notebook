@@ -10,7 +10,6 @@ import { createStore } from "~/redux/store";
 import "./index.css";
 
 const serviceApi = new CompositeServiceApi([new GitlabApi(), new FileApi()]);
-serviceApi.setCurrent("file");
 
 const basename = import.meta.env.BASE_URL;
 

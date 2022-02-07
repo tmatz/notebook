@@ -98,6 +98,7 @@ export class GitlabApi implements IServiceApi {
   }): Promise<void> {
     const { code, state } = args;
     const savedState = getSessionValue("state");
+    removeSessionValue("state");
     if (!code || !state || state != savedState) {
       return Promise.reject();
     }
@@ -108,6 +109,7 @@ export class GitlabApi implements IServiceApi {
     code: string
   ): Promise<RequestAccessTokenResponse> {
     const code_verifier = getSessionValue("code_verifier")!;
+    removeSessionValue("code_verifier");
     const redirect_uri = `${window.location.origin}${
       import.meta.env.BASE_URL
     }login/redirect`;
@@ -177,13 +179,13 @@ export class GitlabApi implements IServiceApi {
 }
 
 function getSessionValue(key: SessionKey): string | null {
-  return sessionStorage.getItem(`${SERVICE_NAME}/${key}`);
+  return sessionStorage.getItem(`notebook/${SERVICE_NAME}/${key}`);
 }
 
 function setSessionValue(key: SessionKey, value: string) {
-  sessionStorage.setItem(`${SERVICE_NAME}/${key}`, value);
+  sessionStorage.setItem(`notebook/${SERVICE_NAME}/${key}`, value);
 }
 
 function removeSessionValue(key: SessionKey) {
-  return sessionStorage.removeItem(`${SERVICE_NAME}/${key}`);
+  return sessionStorage.removeItem(`notebook/${SERVICE_NAME}/${key}`);
 }
