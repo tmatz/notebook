@@ -179,13 +179,13 @@ export class GitlabApi implements IServiceApi {
 }
 
 function getSessionValue(key: SessionKey): string | null {
-  return sessionStorage.getItem(`${SERVICE_NAME}/${key}`);
+  return sessionStorage.getItem(`notebook/${SERVICE_NAME}/${key}`);
 }
 
 function setSessionValue(key: SessionKey, value: string) {
-  sessionStorage.setItem(`${SERVICE_NAME}/${key}`, value);
+  sessionStorage.setItem(`notebook/${SERVICE_NAME}/${key}`, value);
 }
 
 function removeSessionValue(key: SessionKey) {
-  return sessionStorage.removeItem(`${SERVICE_NAME}/${key}`);
+  return sessionStorage.removeItem(`notebook/${SERVICE_NAME}/${key}`);
 }
