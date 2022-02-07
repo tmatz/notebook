@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
-import { IServiceApi } from "~/api/service-api";
+import { CompositeServiceApi } from "~/api/composite-service-api";
 import markdownSlice from "./modules/markdown";
 import userSlice from "./modules/user";
 
-export function createStore(extraArgument: { serviceApi: IServiceApi }) {
+export function createStore(extraArgument: {
+  serviceApi: CompositeServiceApi;
+}) {
   const epicMiddleware = createEpicMiddleware();
 
   return configureStore({

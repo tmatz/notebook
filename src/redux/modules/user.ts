@@ -8,9 +8,10 @@ export const boot = createAsyncThunk<User | undefined>(
   }
 );
 
-export const login = createAsyncThunk<boolean>(
-  "user/oauth",
-  async (_, { extra: { serviceApi } }) => {
+export const login = createAsyncThunk<boolean, string>(
+  "user/login",
+  async (serviceName, { extra: { serviceApi } }) => {
+    serviceApi.setCurrent(serviceName);
     return await serviceApi.login();
   }
 );
@@ -23,6 +24,7 @@ export const logout = createAsyncThunk(
 );
 
 type State = {
+  serviceName: string | undefined;
   isLoggedIn: boolean;
   isPending: boolean;
   user: User | undefined;
@@ -34,6 +36,7 @@ type User = {
 };
 
 const initialState: State = {
+  serviceName: undefined,
   isLoggedIn: false,
   isPending: false,
   user: undefined,
@@ -58,7 +61,8 @@ const slice = createSlice({
         state.isPending = false;
         state.user = undefined;
       })
-      .addCase(login.pending, (state) => {
+      .addCase(login.pending, (state, { meta: { arg: serviceName } }) => {
+        state.serviceName = serviceName;
         state.isPending = true;
       })
       .addCase(login.fulfilled, (state, { payload: success }) => {
@@ -68,11 +72,14 @@ const slice = createSlice({
         }
       })
       .addCase(login.rejected, (state) => {
+        state.serviceName = undefined;
         state.isLoggedIn = false;
         state.isPending = false;
       })
       .addCase(logout.fulfilled, (state) => {
-        state.isPending = true;
+        state.serviceName = undefined;
+        state.isLoggedIn = false;
+        state.isPending = false;
         state.user = undefined;
       });
   },

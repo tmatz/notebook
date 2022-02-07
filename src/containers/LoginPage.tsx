@@ -7,11 +7,11 @@ export default function LoginPage() {
   return (
     <div className={styles.LoginPage}>
       <h1>Login</h1>
-      <button onClick={onClick}>
+      <button onClick={() => onClick("gitlab")}>
         Login by <span className={styles.repoName}>{repoName}</span>
       </button>
       <h2>or</h2>
-      <button onClick={onClick}>Open File</button>
+      <button onClick={() => onClick("file")}>Open File</button>
     </div>
   );
 }

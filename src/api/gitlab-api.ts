@@ -87,7 +87,9 @@ export class GitlabApi implements IServiceApi {
       code_challenge,
       code_challenge_method: "S256",
     };
-    return `${BASE_URL}/oauth/authorize?${new URLSearchParams(query)}`;
+    return `${BASE_URL}/oauth/authorize?${Object.entries(query)
+      .map(([key, value]) => `${key}=${value}`)
+      .join("&")}`;
   }
 
   private checkOAuthCode(args: {

@@ -12,11 +12,14 @@ export function useIsLoggedIn() {
 export function useLogin() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  return useCallback(async () => {
-    if (await dispatch(login())) {
-      navigate("/", { replace: true });
-    }
-  }, [dispatch]);
+  return useCallback(
+    async (serviceName: string) => {
+      if (await dispatch(login(serviceName))) {
+        navigate("/", { replace: true });
+      }
+    },
+    [dispatch]
+  );
 }
 
 export function useLogout() {
