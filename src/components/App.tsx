@@ -1,3 +1,4 @@
+import { Button, Flex, Heading, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import { Route, Routes } from "react-router-dom";
@@ -8,7 +9,7 @@ import { useAppNavigate } from "~/hooks/app-navigate";
 import { useAppDispatch, useRootSelector } from "~/hooks/store";
 import { useIsLoggedIn, useLogout } from "~/hooks/user";
 import { boot } from "~/redux/modules/user";
-import styles from "./App.module.scss";
+//import styles from "./App.module.scss";
 
 export default function App() {
   const navigate = useAppNavigate();
@@ -31,30 +32,25 @@ export default function App() {
       isMounted = false;
     };
   }, []);
-  if (!isBooted) {
-    return (
-      <div className={styles.App}>
-        <h1>
-          <span>Notebook</span>
-        </h1>
-      </div>
-    );
-  }
   return (
-    <div className={styles.App}>
-      <h1>
-        <span>Notebook</span>
-        <span>
-          <UserName />
-          <LogoutButton />
-        </span>
-      </h1>
-      <Routes>
-        <Route path="/" element={<EditMarkdownPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Page404 />} />
-      </Routes>
-    </div>
+    <Flex direction="column" m="10px">
+      <Heading size="2xl">
+        <Flex justify="space-between">
+          <Text>Notebook</Text>
+          <Flex>
+            <UserName />
+            <LogoutButton />
+          </Flex>
+        </Flex>
+      </Heading>
+      {isBooted && (
+        <Routes>
+          <Route path="/" element={<EditMarkdownPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Page404 />} />
+        </Routes>
+      )}
+    </Flex>
   );
 }
 
@@ -64,7 +60,6 @@ function UserName() {
   if (!username) return null;
   return (
     <button
-      className={styles.UserName}
       onClick={() => {
         window.location.href = `https://nxgit.hallab.co.jp/${username}`;
       }}
@@ -79,8 +74,8 @@ function LogoutButton() {
   const [isLoggedIn, isPending] = useIsLoggedIn();
   if (!isLoggedIn || (isLoggedIn && isPending)) return null;
   return (
-    <button className={styles.LogoutButton} onClick={logout}>
+    <Button bg="transparent" onClick={logout}>
       <MdLogout size="20px" />
-    </button>
+    </Button>
   );
 }

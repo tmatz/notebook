@@ -1,4 +1,4 @@
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
@@ -14,10 +14,21 @@ const serviceApi = new CompositeServiceApi([new GitlabApi(), new FileApi()]);
 
 const basename = import.meta.env.BASE_URL;
 
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        backgroundColor: "#282c34",
+        color: "gray.500",
+      },
+    },
+  },
+});
+
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={createStore({ serviceApi })}>
-      <ChakraProvider>
+      <ChakraProvider theme={theme}>
         <BrowserRouter basename={basename}>
           <App />
         </BrowserRouter>
