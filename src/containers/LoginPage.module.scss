@@ -1,12 +1,11 @@
 .LoginPage {
-  text-align: center;
+  @apply text-center;
 
   .repoName {
-    color: orange;
+    @apply text-orange-500;
   }
 
-  & button {
-    padding: 10px 20px;
-    font-size: medium;
+  button {
+    @apply px-2 py-1;
   }
 }
