@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "dev:open": "vite --open",
-    "format": "tsc --noEmit && prettier -w src package.json tsconfig.json vite.config.ts",
+    "format": "tsc --noEmit && prettier --config prettier.format.js -w src package.json tsconfig.json vite.config.ts",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "coverage": "vitest run --coverage",
